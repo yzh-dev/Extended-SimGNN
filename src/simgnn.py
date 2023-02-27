@@ -132,7 +132,7 @@ class SimGNN(torch.nn.Module):
         :param features: Feature matrix.
         :return features: Abstract feature matrix.
         """
-        features = self.convolution_1(features, edge_index)
+        features = self.convolution_1(features, edge_index)#GCN模块：每一层考虑周围的邻居节点，做了3层GCN
         features = F.relu(features)
         features = F.dropout(features, p=self.args.dropout, training=self.training)
         features = self.convolution_2(features, edge_index)
@@ -173,10 +173,10 @@ class SimGNN(torch.nn.Module):
             if hasattr(data["g2"], "batch")
             else torch.tensor((), dtype=torch.long).new_zeros(data["g2"].num_nodes)
         )
-
+        # 分别处理每个节点特征，得到16维向量。图中的batch=128相当于一个大图中的128个子连通区域
         abstract_features_1 = self.convolutional_pass(edge_index_1, features_1)
         abstract_features_2 = self.convolutional_pass(edge_index_2, features_2)
-
+        # 计算子图对中的节点相似性，利用相似性矩阵获得直方图统计向量
         if self.args.histogram:
             hist = self.calculate_histogram(
                 abstract_features_1, abstract_features_2, batch_1, batch_2

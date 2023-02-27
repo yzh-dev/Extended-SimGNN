@@ -129,7 +129,8 @@ def parameter_parser():
         help="Send notification message when the code is finished (only Linux & Mac OS support).",
     )
 
-    parser.set_defaults(histogram=False)
+    # parser.set_defaults(histogram=False)
+    parser.set_defaults(histogram=True)
     parser.set_defaults(diffpool=False)
     parser.set_defaults(plot=False)
     parser.set_defaults(measure_time=False)
