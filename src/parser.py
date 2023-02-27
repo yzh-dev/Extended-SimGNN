@@ -53,7 +53,8 @@ def parameter_parser():
     parser.add_argument(
         "--tensor-neurons",
         type=int,
-        default=16,
+        default=10,#NTN网络中的关系数K值
+        # default=16,#NTN网络中的关系数K值
         help="Neurons in tensor network layer. Default is 16.",
     )
 
@@ -72,7 +73,8 @@ def parameter_parser():
     )
 
     parser.add_argument(
-        "--bins", type=int, default=16, help="Similarity score bins. Default is 16."
+        # "--bins", type=int, default=16, help="Similarity score bins. Default is 16."
+        "--bins", type=int, default=12, help="Similarity score bins. Default is 16."
     )
 
     parser.add_argument(

@@ -49,14 +49,14 @@ class AttentionModule(torch.nn.Module):
         :param batch: Batch vector, which assigns each node to a specific example
         :return representation: A graph level representation matrix.
         """
-        size = batch[-1].item() + 1 if size is None else size
-        mean = scatter_mean(x, batch, dim=0, dim_size=size)
-        transformed_global = torch.tanh(torch.mm(mean, self.weight_matrix))
+        size = batch[-1].item() + 1 if size is None else size#批量大小
+        mean = scatter_mean(x, batch, dim=0, dim_size=size)#全局向量，[128,16]
+        transformed_global = torch.tanh(torch.mm(mean, self.weight_matrix))#可学习的权重矩阵
 
-        coefs = torch.sigmoid((x * transformed_global[batch]).sum(dim=1))
-        weighted = coefs.unsqueeze(-1) * x
+        coefs = torch.sigmoid((x * transformed_global[batch]).sum(dim=1))#和子图中全局向量的相似性，即论文中所谓的注意力
+        weighted = coefs.unsqueeze(-1) * x#对每个节点的特征向量进行加权
 
-        return scatter_add(weighted, batch, dim=0, dim_size=size)
+        return scatter_add(weighted, batch, dim=0, dim_size=size)#求得每个子图最终的全局向量表示，图级别embedding
 
     def get_coefs(self, x):
         mean = x.mean(dim=0)
@@ -162,18 +162,21 @@ class TensorNetworkModule(torch.nn.Module):
         :param embedding_2: Result of the 2nd embedding after attention.
         :return scores: A similarity score vector.
         """
-        batch_size = len(embedding_1)
+        batch_size = len(embedding_1)#批量大小
         scoring = torch.matmul(
             embedding_1, self.weight_matrix.view(self.args.filters_3, -1)
         )
-        scoring = scoring.view(batch_size, self.args.filters_3, -1).permute([0, 2, 1])
+        scoring = scoring.view(batch_size, self.args.filters_3, -1).permute([0, 2, 1])#中间的维度10代表论文中的K值，寻找2个子图全局向量间的K种关系
         scoring = torch.matmul(
             scoring, embedding_2.view(batch_size, self.args.filters_3, 1)
         ).view(batch_size, -1)
+
+        #子图全局向量拼接后进行计算
         combined_representation = torch.cat((embedding_1, embedding_2), 1)
         block_scoring = torch.t(
             torch.mm(self.weight_matrix_block, torch.t(combined_representation))
         )
+
         scores = F.relu(scoring + block_scoring + self.bias.view(-1))
         return scores
 

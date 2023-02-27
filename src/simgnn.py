@@ -176,7 +176,7 @@ class SimGNN(torch.nn.Module):
         # 分别处理每个节点特征，得到16维向量。图中的batch=128相当于一个大图中的128个子连通区域
         abstract_features_1 = self.convolutional_pass(edge_index_1, features_1)
         abstract_features_2 = self.convolutional_pass(edge_index_2, features_2)
-        # 计算子图对中的节点相似性，利用相似性矩阵获得直方图统计向量
+        # 计算子图对中的节点相似性，利用相似性矩阵获得直方图统计向量：hist=(batch,16)
         if self.args.histogram:
             hist = self.calculate_histogram(
                 abstract_features_1, abstract_features_2, batch_1, batch_2
@@ -192,7 +192,7 @@ class SimGNN(torch.nn.Module):
         else:
             pooled_features_1 = self.attention(abstract_features_1, batch_1)
             pooled_features_2 = self.attention(abstract_features_2, batch_2)
-
+        # #NTN网络
         scores = self.tensor_network(pooled_features_1, pooled_features_2)
 
         if self.args.histogram:
